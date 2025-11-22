@@ -1,0 +1,256 @@
+.homePageWrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color:#fff;
+  height: 100vh;
+}
+
+.formWrapper {
+  background-color: #3A3B3C;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  width: 400px;
+  max-width: 90%;
+}
+
+footer {
+  margin-top: 20px;
+  color: #ccc;
+  position: fixed;
+  bottom: 10px;
+}
+
+.inputGroup {
+  margin-bottom: 15px;
+  display: flex;
+  flex-direction: column;
+}
+
+.mainLabel {
+  margin-bottom: 20px;
+  margin-left: 24%;
+  margin-top: auto;
+  font-weight: bold;
+}
+
+.homePageLogo {
+  margin-bottom: 20px;
+  height: 100px;
+  margin-left: 22%;
+}
+
+.inputBox {
+  padding: 10px;
+  border: 1px solid #555;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  outline: none;
+  background-color: #2C2D2E;
+  color: #fff;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.btn {
+  padding: 10px;
+  color: black;
+  border: none;
+  font-weight: bold;
+  border-radius: 5px;
+  font-size: 16px;
+  cursor: pointer;
+  margin-bottom: 10px;
+  transition: all 0.3s ease-in-out;
+}
+
+.joinBtn, .leaveBtn {
+  background-color: #4CAF50;
+  width: 40%;
+  margin-left: 30%;
+} 
+.joinBtn:hover, .leaveBtn:hover {
+  background-color: rgb(134, 206, 62);
+  transform: scale(1.05);
+}
+
+.createNewBtn {
+  color :rgb(122, 227, 17);
+  text-decoration: none;
+  border-bottom: 1px solid rgb(122, 227, 17);
+}
+.createNewBtn:hover {
+  color: rgb(62, 122, 6);
+  transform: scale(1.05);
+}
+
+.createInfo {
+  margin-top: 10px;
+  font-size: 14px;
+  color: #ccc;
+  text-align: center;
+  transition: all 0.3s ease-in-out;
+}
+
+.mainWrap {
+  display: grid;
+  grid-template-columns: 230px 1fr;
+}
+
+.aside {
+  background: #2C2D2E;
+  display: flex;
+  flex-direction: column;
+}
+
+.asideInner {
+  flex: 1;
+}
+
+.connectedText {
+  border-bottom: 10px solid #555;
+  color: #4CAF50;
+  font-weight: bold;
+  padding-bottom: 20px;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.clientList {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.client {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 10px;
+  border-bottom: 10px solid #555;
+  flex-direction: column;
+  padding-bottom: 10px;
+  font-weight: bold;
+}
+
+.userName {
+  margin-top: 5;
+}
+
+.logo {
+  border-bottom: 1px solid #555;
+  padding-bottom: 10px;
+}
+.logoImage {
+  height: 60px;
+  margin: 10px 0;
+  margin-left: 20%;
+}
+
+.leaveBtn, .copyBtn {
+  margin-left: 5%;
+  width: 90%;
+}
+
+.CodeMirror {
+  min-height: calc(100vh - 20px);
+  font-size: 20px;
+  line-height: 1.6;
+  padding-top: 20px;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@media (min-width: 1024px) {
+  .formWrapper {
+    width: 500px;
+    padding: 30px; 
+  }
+
+  .homePageLogo {
+    height: 130px; 
+    margin-bottom: 30px;
+  }
+
+  .mainLabel {
+    font-size: 1.5em;
+    margin-bottom: 25px;
+  }
+
+  .inputBox {
+    padding: 15px;
+    font-size: 18px;
+  } 
+
+  .btn {
+    padding: 15px;
+    font-size: 18px;
+  }
+}
