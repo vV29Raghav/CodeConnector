@@ -39,8 +39,13 @@ io.on('connection', (socket) => {
       });
     });
 
+    socket.on(ACTIONS.CODE_CHANGE, ({roomId, code}) => {
+      //Broadcast to all other clients except the sender
+      io.to(roomId).emit(ACTIONS.CODE_CHANGE, {code});
+    });
+
     //Whenever any user disconnects this event triggers
-    socket.on('disconneting', () => {
+    socket.on('disconnecting', () => {
       const rooms = [...socket.rooms]; //Get all rooms in which this socket is present
       rooms.forEach((roomId) => {
         socket.in(roomId).emit(ACTIONS.DISCONNECTED, {

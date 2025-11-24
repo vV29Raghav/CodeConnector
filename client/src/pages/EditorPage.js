@@ -10,12 +10,15 @@ import ACTIONS from '../Actions';
 const EditorPage = () => {
 
   const socketRef = useRef(null); //Stop multiple rerenders when data updates means it holds mutable data
+  const effectRan = useRef(false); //For solving StrictMode useEffect double call issue in dev mode
   const location = useLocation();
   const reactNavigator = useNavigate();
   const {roomId} = useParams();
   const [clients, setClients] = useState([]);
 
   useEffect(() => {
+    if(effectRan.current) return; //To solve StrictMode useEffect double call issue in dev mode
+    effectRan.current = true;
     const init = async () => {
       socketRef.current = await initSocket();  //Promise come here from socket.js where initSocket is async function
 
@@ -36,7 +39,6 @@ const EditorPage = () => {
       socketRef.current.on(ACTIONS.JOINED, ({clients, username, socketId}) =>{
         if(username !== location.state?.username) {  //to notify other except self
           toast.success(`${username} joined the room.`);
-          // console.log(`${username} joined`);
         }
         setClients(clients);
       })
@@ -48,19 +50,22 @@ const EditorPage = () => {
           return prev.filter(client => client.socketId !== socketId);//filtering the list by removing the disconnected client
         })
       });
-
     }
 
     init();
 
     //Here on is the listener and we need to clean up the event listeners when component unmounts always(to avoid memory leaks)
     return () => {
-      socketRef.current.disconnect();
+      if(socketRef.current) {
+      socketRef.current.off('connect_error');
+      socketRef.current.off('connect_failed');
       socketRef.current.off(ACTIONS.JOINED);
       socketRef.current.off(ACTIONS.DISCONNECTED);
+      socketRef.current.disconnect();
+      }
     }
-    
-  }, []);
+
+  }, [roomId, reactNavigator, location.state]);
 
   
 
@@ -86,7 +91,7 @@ const EditorPage = () => {
         <button className='btn leaveBtn'>Leave</button>
       </div>
       <div className='editorWrap'>
-        <Editor />
+        <Editor socketRef={socketRef} roomId={roomId} />
       </div>
     </div>
   )

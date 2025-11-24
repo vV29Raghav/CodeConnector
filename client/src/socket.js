@@ -7,5 +7,5 @@ export const initSocket = async () => {
     timeout: 10000,
     transports: ['websocket'],
   };
-  return io(process.env.REACT_APP_SOCKET_URL, options); //return promise of socket instance
+  return new io(process.env.REACT_APP_SOCKET_URL, options); //return promise of socket instance
 }
