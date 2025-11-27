@@ -1,4 +1,4 @@
-const ACTIONS = require('../client/src/Actions.js'); 
+const ACTIONS = require('../client/src/Utils/Actions.js'); 
 const express = require('express');
 const app = express();
 require('dotenv').config();

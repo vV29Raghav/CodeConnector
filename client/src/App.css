@@ -102,11 +102,14 @@ footer {
 .aside {
   background: #2C2D2E;
   display: flex;
+  max-height: 100vh;
   flex-direction: column;
 }
 
 .asideInner {
   flex: 1;
+  flex-direction: column;
+  height:100%;
 }
 
 .connectedText {
@@ -118,27 +121,41 @@ footer {
   text-align: center;
 }
 
-.clientList {
+
+.clientsList {
+  max-width: 100%;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 20px;
+  padding: 10px;
+  height: 350px;
+  overflow-y: auto;
+  gap: 35px;
+}
+
+.clientsList::-webkit-scrollbar {
+  width: 8px;
+}
+
+.clientsList::-webkit-scrollbar-thumb {
+  background-color: #6c6c6c;
+  border-radius: 4px;
 }
 
 .client {
   display: flex;
-  flex-direction: column;
+  flex-direction: column; 
   align-items: center;
   text-align: center;
   margin-bottom: 10px;
-  border-bottom: 10px solid #555;
-  flex-direction: column;
   padding-bottom: 10px;
+  border-bottom: 1px solid #555; 
+  
   font-weight: bold;
 }
 
 .userName {
-  margin-top: 5;
+  margin-top: 5px;
 }
 
 .logo {
@@ -157,7 +174,7 @@ footer {
 }
 
 .CodeMirror {
-  min-height: calc(100vh - 120px);
+  min-height: calc(100vh - 115px);
   font-size: 20px;
   line-height: 1.6;
   padding-top: 20px;
