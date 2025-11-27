@@ -1,13 +1,13 @@
-import React, { useEffect, useRef } from "react";
+import React, { use, useEffect, useRef } from "react";
 import Codemirror from "codemirror";
 import 'codemirror/lib/codemirror.css';
 import 'codemirror/mode/javascript/javascript';
 import 'codemirror/theme/dracula.css';
 import 'codemirror/addon/edit/closetag';
 import 'codemirror/addon/edit/closebrackets';
-import ACTIONS from "../Actions";
+import ACTIONS from "../Utils/Actions";
 
-const Editor = ({socketRef, roomId}) => {
+const Editor = ({socketRef, roomId, onCodeChange}) => {
 
   const editorRef = useRef(null);
   const editorInitialized = useRef(false);
@@ -30,6 +30,8 @@ const Editor = ({socketRef, roomId}) => {
         const { origin } = changes;
         const code = instance.getValue();
 
+        onCodeChange(code); //Callback to update codeRef in EditorPage
+
         if(origin !== 'setValue') {
           socketRef.current.emit(ACTIONS.CODE_CHANGE, {
             roomId,
@@ -37,25 +39,30 @@ const Editor = ({socketRef, roomId}) => {
           });
         }
       });
+    };
 
+    init();
+  }, []);
 
-
-      if(socketRef.current != null) {
+  useEffect(() => {
+    if(socketRef.current) {
         socketRef.current.on(ACTIONS.CODE_CHANGE, ({code}) => {
           if(code !== null && code !==editorRef.current.getValue()) {
            editorRef.current.setValue(code);
           }
         });
       };
-    };
-    init();
-    return () => {
-      if(!socketRef.current) return;
-      socketRef.current.off(ACTIONS.CODE_CHANGE);
-    }
-  }, []);
+      return () => {
+        if(!socketRef.current) return;
+        socketRef.current.off(ACTIONS.CODE_CHANGE);
+      }
+  }, [socketRef.current]);
 
-  return <textarea id="realTimeEditor"></textarea>;
+  return (
+  
+  <textarea id="realTimeEditor"></textarea>
+
+);
 };
 
 export default Editor;

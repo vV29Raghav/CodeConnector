@@ -41,7 +41,12 @@ io.on('connection', (socket) => {
 
     socket.on(ACTIONS.CODE_CHANGE, ({roomId, code}) => {
       //Broadcast to all other clients except the sender
-      io.to(roomId).emit(ACTIONS.CODE_CHANGE, {code});
+      socket.in(roomId).emit(ACTIONS.CODE_CHANGE, {code});
+    });
+
+    socket.on(ACTIONS.SYNC_CODE, ({code, socketId}) => {
+      //Broadcast to all other clients except the sender
+      io.to(socketId).emit(ACTIONS.CODE_CHANGE, {code});
     });
 
     //Whenever any user disconnects this event triggers
