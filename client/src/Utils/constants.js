@@ -1,6 +1,7 @@
 export const LANGUAGE_VERSIONS = {
-  javascript : "18.15.0",
-  python : "3.11.4",
-  java : "20.0.2",
-  cpp : "20.0.1"
-}
+    'Java': {
+        version: '15.0.2',
+        snippet: 'class Main {\n    public static void main(String[] args) {\n        System.out.println("Hello Java World!");\n    }\n}',
+        mode: 'java'
+    },
+};

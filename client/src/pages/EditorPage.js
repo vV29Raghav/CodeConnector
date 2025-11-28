@@ -21,6 +21,7 @@ const EditorPage = () => {
   const {roomId} = useParams();
   const [clients, setClients] = useState([]);
   const [selectedLanguage, setSelectedLanguage] = useState("Java");
+  const [codeSnippet, setCodeSnippet] = useState(LANGUAGE_VERSIONS["Java"].snippet || '');
 
   useEffect(() => {
     if(effectRan.current) return; //To solve StrictMode useEffect double call issue in dev mode
@@ -77,6 +78,24 @@ const EditorPage = () => {
 
   }, [roomId, reactNavigator, location.state]);
 
+  const handleSelect = (eventKey) => {
+        const newSnippet = LANGUAGE_VERSIONS[eventKey]?.snippet || "";
+        
+        // 1. Update states
+        setSelectedLanguage(eventKey);
+        setCodeSnippet(newSnippet);
+        codeRef.current = newSnippet;
+
+        // 2. Broadcast the new snippet to all connected clients
+        if (socketRef.current) {
+            socketRef.current.emit(ACTIONS.CODE_CHANGE, {
+                roomId,
+                code: newSnippet,
+            });
+        }
+    };
+
+
   //Copy roomID function
   async function copyRoomId() {
     try {
@@ -96,13 +115,6 @@ const EditorPage = () => {
   if(!location.state) {
     return <Navigate to="/"/>;
   }
-
-  //Dropdown select handler
-  
-
-  const handleSelect = (eventKey) => {
-    setSelectedLanguage(eventKey);
-  };
 
 
   return (
@@ -129,17 +141,16 @@ const EditorPage = () => {
               {selectedLanguage || "Select Java"}
             </Dropdown.Toggle>
             <Dropdown.Menu>
-              <Dropdown.Item eventKey="Javascript">Javascript</Dropdown.Item>
-              <Dropdown.Item eventKey="C++">C++</Dropdown.Item>
-              <Dropdown.Item eventKey="Python">Python</Dropdown.Item>
-              <Dropdown.Item eventKey="Java">Java</Dropdown.Item>
+              {Object.keys(LANGUAGE_VERSIONS).map((lang) => (
+                <Dropdown.Item eventKey={lang} key={lang}>{lang}</Dropdown.Item>
+              ))}
             </Dropdown.Menu>
           </Dropdown>
           <button className='btn addNew' ><img src={file} alt="File Icon" className='runImage'/>Add New</button>
           <button className='btn run' ><img src={play} alt="Run Icon" className='runImage'/>Run Code</button>
         </div>
         
-       <Editor socketRef={socketRef} roomId={roomId} onCodeChange= {(code) => {codeRef.current = code}} selectedLanguage={selectedLanguage}/>
+       <Editor socketRef={socketRef} roomId={roomId} onCodeChange= {(code) => {codeRef.current = code}} selectedLanguage={selectedLanguage} codeSnippet={codeSnippet} key={codeSnippet}/>
       </div>
     </div>
   )

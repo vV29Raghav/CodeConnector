@@ -5,9 +5,12 @@ import 'codemirror/mode/javascript/javascript';
 import 'codemirror/theme/dracula.css';
 import 'codemirror/addon/edit/closetag';
 import 'codemirror/addon/edit/closebrackets';
+import 'codemirror/mode/clike/clike';
+import 'codemirror/mode/python/python';
 import ACTIONS from "../Utils/Actions";
+import { LANGUAGE_VERSIONS } from "../Utils/constants";
 
-const Editor = ({socketRef, roomId, onCodeChange}) => {
+const Editor = ({socketRef, roomId, onCodeChange, selectedLanguage, codeSnippet}) => {
 
   const editorRef = useRef(null);
   const editorInitialized = useRef(false);
