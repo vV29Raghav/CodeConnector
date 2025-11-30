@@ -1,290 +1,119 @@
-import React, {useState, useRef, useEffect, use} from 'react';
-
-import { toast } from 'react-hot-toast';
-
-import { useLocation, useNavigate, Navigate, useParams } from 'react-router-dom';
-
-import Client from '../components/Client';
-
-import Editor from '../components/Editor';
-
-import { initSocket } from '../Utils/socket';
-
-import ACTIONS from '../Utils/Actions';
-
-import Dropdown from 'react-bootstrap/Dropdown';
-
-import play from '../assets/play.png';
-
-import file from '../assets/file.png';
-
-import { LANGUAGE_VERSIONS } from '../Utils/constants';
-
-
-
-
-
-const EditorPage = () => {
-
-
-
-  const socketRef = useRef(null); //Stop multiple rerenders when data updates means it holds mutable data
-
-  const effectRan = useRef(false); //For solving StrictMode useEffect double call issue in dev mode
-
-  const codeRef = useRef(null); //for code synchronization
-
-  const location = useLocation();
-
-  const reactNavigator = useNavigate();
-
-  const {roomId} = useParams();
-
-  const [clients, setClients] = useState([]);
-
-  const [selectedLanguage, setSelectedLanguage] = useState("Java");
-
-
-
-  useEffect(() => {
-
-    if(effectRan.current) return; //To solve StrictMode useEffect double call issue in dev mode
-
-    effectRan.current = true;
-
-    const init = async () => {
-
-      socketRef.current = await initSocket();  //Promise come here from socket.js where initSocket is async function
-
-
-
-      function  handleErrors(e) {
-
-        console.log('Socket error', e);
-
-        toast.error('Socket connection failed, try again later.');
-
-        reactNavigator('/'); //Redirect to home page
-
-      }
-
-      socketRef.current.on('connect_error', handleErrors);
-
-      socketRef.current.on('connect_failed', handleErrors);
-
-
-
-      socketRef.current.emit(ACTIONS.JOIN, {
-
-        roomId,
-
-        username : location.state?.username,
-
-      });
-
-
-
-      //Listening for joined event from server
-
-      socketRef.current.on(ACTIONS.JOINED, ({clients, username, socketId}) =>{
-
-        if(username !== location.state?.username) {  //to notify other except self
-
-          toast.success(`${username} joined the room.`);
-
-        }
-
-        setClients(clients);
-
-        socketRef.current.emit(ACTIONS.SYNC_CODE, {
-
-          socketId,
-
-          code: codeRef.current,
-
-        });
-
-      })
-
-
-
-      //Listening for disconnected event from server
-
-      socketRef.current.on(ACTIONS.DISCONNECTED, ({socketId, username}) => {
-
-        toast.success(`${username} left the room.`);
-
-        setClients((prev) => {
-
-          return prev.filter(client => client.socketId !== socketId);//filtering the list by removing the disconnected client
-
-        })
-
-      });
-
+const ACTIONS = require('../client/src/Utils/Actions.js'); 
+const express = require('express');
+const app = express();
+require('dotenv').config();
+const {GoogleGenAI} = require('@google/genai');
+const ai = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY,
+});
+const cors = require('cors');
+
+const http = require('http');
+app.use(cors());
+const {Server} = require('socket.io');
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST'],
+  },
+});
+
+const PORT = process.env.PORT || 4000;
+
+const userSocketMap = {};
+function getAllConnectedClients(roomId) {
+  return Array.from(io.sockets.adapter.rooms.get(roomId) || []).map((socketId) => {//Iterate on all socketsIds in the room
+    return {
+      socketId,
+      username: userSocketMap[socketId],
     }
-
-
-
-    init();
-
-
-
-    //Here on is the listener and we need to clean up the event listeners when component unmounts always(to avoid memory leaks)
-
-    return () => {
-
-      if(socketRef.current) {
-
-      socketRef.current.off('connect_error');
-
-      socketRef.current.off('connect_failed');
-
-      socketRef.current.off(ACTIONS.JOINED);
-
-      socketRef.current.off(ACTIONS.DISCONNECTED);
-
-      socketRef.current.disconnect();
-
-      }
-
-    }
-
-
-
-  }, [roomId, reactNavigator, location.state]);
-
-
-
-  //Copy roomID function
-
-  async function copyRoomId() {
-
-    try {
-
-      await navigator.clipboard.writeText(roomId);
-
-      toast.success('Room ID has been copied to your clipboard');
-
-    } catch (err) {
-
-      toast.error('Could not copy the Room ID');
-
-      console.error(err);
-
-    }
-
-  }
-
-
-
-  //Leave room function
-
-  async function leaveRoom() {
-
-    reactNavigator('/');
-
-  }
-
-
-
-  if(!location.state) {
-
-    return <Navigate to="/"/>;
-
-  }
-
-
-
-  //Dropdown select handler
-
- 
-
-
-
-  const handleSelect = (eventKey) => {
-
-    setSelectedLanguage(eventKey);
-
-  };
-
-
-
-
-
-  return (
-
-    <div className='mainWrap'>
-
-      <div className='aside'>
-
-        <div className='asideInner'>
-
-          <div className='logo'>
-
-            <img className='logoImage' src="/Logo.gif" alt="code-sync-logo" />
-
-          </div>
-
-          <h3 className='connectedText'>Connected</h3>
-
-          <div className='clientsList'>
-
-            {clients.map((client) => (
-
-              <Client username={client.username} key={client.socketId}/>
-
-            ))}
-
-          </div>
-
-        </div>
-
-        <button className='btn copyBtn' onClick={copyRoomId}>Copy ROOM ID</button>
-
-        <button className='btn leaveBtn' onClick={leaveRoom}>Leave</button>
-
-      </div>
-
-      <div className='editorWrap'>
-
-        <div className='editorHeader'>
-
-          <Dropdown onSelect={handleSelect}>
-
-            <Dropdown.Toggle variant="success" id="dropdown-language">
-
-              {selectedLanguage || "Select Java"}
-
-            </Dropdown.Toggle>
-
-            <Dropdown.Menu>
-
-              <Dropdown.Item eventKey="C++">C++</Dropdown.Item>
-
-              <Dropdown.Item eventKey="Python">Python</Dropdown.Item>
-
-              <Dropdown.Item eventKey="Java">Java</Dropdown.Item>
-
-            </Dropdown.Menu>
-
-          </Dropdown>
-
-          <button className='btn addNew' ><img src={file} alt="File Icon" className='runImage'/>Add New</button>
-
-          <button className='btn run' ><img src={play} alt="Run Icon" className='runImage'/>Run Code</button>
-
-        </div>
-
-       
-
-       <Editor socketRef={socketRef} roomId={roomId} onCodeChange= {(code) => {codeRef.current = code}} selectedLanguage={selectedLanguage}/>
-
-      </div>
-
-    </div>
-
-  )
-
+  })
 }
-export default EditorPage;
+
+//Whenever a user connects this event triggers
+io.on('connection', (socket) => {
+
+    console.log('a user connected', socket.id); 
+
+    socket.on(ACTIONS.JOIN, ({roomId, username}) => {
+      userSocketMap[socket.id] = username;
+      socket.join(roomId);
+      const clients = getAllConnectedClients(roomId);
+      clients.forEach(({socketId}) => {
+        io.to(socketId).emit(ACTIONS.JOINED, {
+          clients,
+          username,
+          socketId: socket.id,
+        });
+      });
+    });
+
+    socket.on(ACTIONS.CODE_CHANGE, ({roomId, code}) => {
+      //Broadcast to all other clients except the sender
+      socket.in(roomId).emit(ACTIONS.CODE_CHANGE, {code});
+    });
+
+    socket.on(ACTIONS.LANGUAGE_CHANGE, ({roomId, language, code}) => {
+      //Broadcast to all other clients except the sender
+      socket.in(roomId).emit(ACTIONS.LANGUAGE_CHANGE, {language, code});
+    });
+
+    socket.on(ACTIONS.SYNC_CODE, ({code, socketId}) => {
+      //Broadcast to all other clients except the sender
+      io.to(socketId).emit(ACTIONS.CODE_CHANGE, {code});
+      io
+    });
+
+    //Whenever any user disconnects this event triggers
+    socket.on('disconnecting', () => {
+      const rooms = [...socket.rooms]; //Get all rooms in which this socket is present
+      rooms.forEach((roomId) => {
+        socket.in(roomId).emit(ACTIONS.DISCONNECTED, {
+          socketId: socket.id,
+          username: userSocketMap[socket.id],
+        });
+      });
+      delete userSocketMap[socket.id];
+      socket.leave();
+    });
+
+
+}); 
+
+app.post('/run-code', express.json(), async (req, res) => {
+  const {language, code} = req.body;
+  if(!code || !language) {
+    return res.status(400).json({error: 'Code and language are required'});
+  }
+
+  const prompt = `
+    You are a code analysis and execution agent.
+    If the language is Java, execute the code and return ONLY the output/error.
+  `;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+       contents: prompt,
+       config: {
+        tools: [{codeExecution: {}}],
+       }
+    });
+    const outputText = (response?.text || response?.output_text || '').trim();
+
+    if (outputText.startsWith('Error:')) {
+      return res.status(400).json({ error: outputText });
+    }
+    res.json({output: outputText});
+  }
+  catch (error) {
+    console.error('Error during code execution:', error);
+    res.status(500).json({error: 'Internal server error'});
+  }
+
+});
+
+server.listen(PORT, () => {
+    console.log(`listening on *:${PORT}`);
+});

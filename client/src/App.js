@@ -8,7 +8,7 @@ import EditorPage from './pages/EditorPage';
 function App() {
   return (
     <>
-      <Toaster position='top-right' toastOptions={{
+      <Toaster position='top-center' toastOptions={{
         success: {
           theme: {
             primary: '#4aed88',

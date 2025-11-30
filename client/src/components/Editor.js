@@ -7,6 +7,7 @@ import 'codemirror/addon/edit/closetag';
 import 'codemirror/addon/edit/closebrackets';
 import 'codemirror/mode/clike/clike';
 import 'codemirror/mode/python/python';
+import 'codemirror/mode/javascript/javascript';
 import ACTIONS from "../Utils/Actions";
 import { LANGUAGE_VERSIONS } from "../Utils/constants";
 
@@ -21,7 +22,7 @@ const Editor = ({socketRef, roomId, onCodeChange, selectedLanguage, codeSnippet}
 
     async function init() {
       editorRef.current = Codemirror.fromTextArea(document.getElementById("realTimeEditor"), {
-        mode: { name: "javascript", json: true },
+        mode: { name: "java", json: true },
         theme: 'dracula',
         autocloseTags: true,
         autoCloseBrackets: true,
@@ -35,7 +36,7 @@ const Editor = ({socketRef, roomId, onCodeChange, selectedLanguage, codeSnippet}
 
         onCodeChange(code); //Callback to update codeRef in EditorPage
 
-        if(origin !== 'setValue') {
+        if(origin !== 'setValue' && socketRef.current) {
           socketRef.current.emit(ACTIONS.CODE_CHANGE, {
             roomId,
             code,
@@ -48,16 +49,38 @@ const Editor = ({socketRef, roomId, onCodeChange, selectedLanguage, codeSnippet}
   }, []);
 
   useEffect(() => {
+    if(editorRef.current) {
+      console.log("Editor instance available:", !!editorRef.current);
+      
+    
+      if(codeSnippet !== editorRef.current.getValue()) {
+        editorRef.current.setValue(codeSnippet);
+      } 
+
+      const mode = LANGUAGE_VERSIONS[selectedLanguage]?.mode;
+
+      if(mode) {
+        console.log("CodeMirror Mode set to:", mode);
+        editorRef.current.setOption("mode", mode);
+      }
+      
+    }
+  }, [selectedLanguage, codeSnippet]);
+
+  
+  useEffect(() => {
     if(socketRef.current) {
         socketRef.current.on(ACTIONS.CODE_CHANGE, ({code}) => {
           if(code !== null && code !==editorRef.current.getValue()) {
            editorRef.current.setValue(code);
           }
         });
+         socketRef.current.on(ACTIONS.LANGUAGE_CHANGE, () => {});//Passive listener to avoid errors
       };
       return () => {
         if(!socketRef.current) return;
         socketRef.current.off(ACTIONS.CODE_CHANGE);
+        socketRef.current.off(ACTIONS.LANGUAGE_CHANGE);
       }
   }, [socketRef.current]);
 
