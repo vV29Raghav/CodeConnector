@@ -6,6 +6,8 @@ const ACTIONS = {
   LEAVE: 'leave',
   CODE_CHANGE: 'code_change',
   LANGUAGE_CHANGE: 'language_change',
+  SYNC_RUNNING: 'sync_running',
+  SYNC_OUTPUT: 'sync_output',
 };
 
 module.exports = ACTIONS;
