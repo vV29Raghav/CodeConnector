@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, use } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
 import { useLocation, useNavigate, Navigate, useParams } from 'react-router-dom';
 import Client from '../components/Client';
@@ -259,7 +259,6 @@ const EditorPage = () => {
               ))}
             </Dropdown.Menu>
           </Dropdown>
-          <button className='btn addNew' ><img src={file} alt="File Icon" className='runImage' />Add New</button>
           <button className='btn run' onClick={runCode} disabled={loading}><img src={play} alt="Run Icon" className='runImage' />{loading ? 'Running...' : 'Run Code'}</button>
         </div>
 
