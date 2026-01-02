@@ -213,11 +213,64 @@ footer {
 
 .aside:hover .userName {
   opacity: 1;
-  max-width: 150px;
+  max-width: 60px;
   max-height: 30px;
   margin-top: 5px;
-  font-size: 12px;
+  font-size: 10px;
   text-align: center;
+}
+
+.avatar-wrapper {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.admin-badge,
+.lock-badge {
+  position: absolute;
+  font-size: 12px;
+  bottom: -5px;
+  right: -5px;
+  background: #1a202c;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #555;
+}
+
+.lock-badge {
+  left: -5px;
+  right: auto;
+  font-size: 10px;
+}
+
+.auth-btn {
+  margin-top: 5px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: none;
+  font-size: 10px;
+  font-weight: bold;
+  cursor: pointer;
+  opacity: 0;
+  max-height: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+}
+
+.aside:hover .auth-btn {
+  opacity: 1;
+  max-height: 20px;
+  visibility: visible;
+}
+
+.auth-btn.revoke:hover {
+  background-color: #e53935;
 }
 
 .logo {
@@ -579,4 +632,67 @@ footer {
     height: 18px;
     margin-right: 6px;
   }
+}
+
+.save {
+  background-color: #3b82f6;
+  color: white;
+  margin-left: 10px;
+}
+
+.save:hover {
+  background-color: #2563eb;
+}
+
+.save:disabled {
+  background-color: #93c5fd;
+  cursor: not-allowed;
+}
+
+/* Home Page Saved Rooms */
+.savedRoomsWrapper {
+  margin-top: 25px;
+  padding-top: 20px;
+  border-top: 1px solid #424242;
+  text-align: left;
+}
+
+.savedRoomsLabel {
+  color: #fff;
+  margin-bottom: 15px;
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+.savedRoomsList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 150px;
+  overflow-y: auto;
+}
+
+.savedRoomItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #1c1e29;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.savedRoomItem:hover {
+  background: #2a2e3f;
+}
+
+.savedRoomId {
+  color: #4aed88;
+  font-family: monospace;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 180px;
 }

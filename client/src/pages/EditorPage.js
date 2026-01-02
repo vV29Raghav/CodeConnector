@@ -7,8 +7,8 @@ import { initSocket } from '../Utils/socket';
 import ACTIONS from '../Utils/Actions';
 import Dropdown from 'react-bootstrap/Dropdown';
 import play from '../assets/play.png';
-import file from '../assets/file.png';
 import { LANGUAGE_VERSIONS } from '../Utils/constants.js';
+import { useUser, UserButton } from '@clerk/clerk-react';
 
 
 const EditorPage = () => {
@@ -26,6 +26,18 @@ const EditorPage = () => {
 
   const [output, setOutput] = useState('Run code to see output here...');
   const [loading, setLoading] = useState(false);
+  const [currentUserInfo, setCurrentUserInfo] = useState({ isAdmin: false, canRunCode: false });
+  const { isSignedIn, user } = useUser();
+  const languageRef = useRef(selectedLanguage);
+  const userInfoRef = useRef(currentUserInfo);
+
+  useEffect(() => {
+    languageRef.current = selectedLanguage;
+  }, [selectedLanguage]);
+
+  useEffect(() => {
+    userInfoRef.current = currentUserInfo;
+  }, [currentUserInfo]);
 
   useEffect(() => {
     if (effectRan.current) return; //To solve StrictMode useEffect double call issue in dev mode
@@ -54,14 +66,41 @@ const EditorPage = () => {
           socketRef.current.emit(ACTIONS.SYNC_CODE, {
             socketId,
             code: codeRef.current,
-            language: selectedLanguage,
+            language: languageRef.current,
           });
         }
         setClients(clients);
+
+        // Update current user info
+        const me = clients.find(c => c.username === location.state?.username);
+        if (me) {
+          setCurrentUserInfo({ isAdmin: me.isAdmin, canRunCode: me.permissions.canRunCode });
+        }
       })
 
+      socketRef.current.on(ACTIONS.ROOM_FULL, ({ message }) => {
+        toast.error(message);
+        reactNavigator('/');
+      });
+
+      socketRef.current.on(ACTIONS.AUTHORITY_CHANGED, ({ clients }) => {
+        setClients(clients);
+        const me = clients.find(c => c.username === location.state?.username);
+        if (me) {
+          const oldCanRun = userInfoRef.current.canRunCode;
+          const newCanRun = me.permissions.canRunCode;
+          setCurrentUserInfo({ isAdmin: me.isAdmin, canRunCode: newCanRun });
+
+          if (oldCanRun !== newCanRun) {
+            toast(newCanRun ? '🔓 You now have authority to run code!' : '🔒 Your run authority has been revoked.', {
+              icon: newCanRun ? '✅' : '🚫',
+            });
+          }
+        }
+      });
+
       socketRef.current.on(ACTIONS.LANGUAGE_CHANGE, ({ language, code }) => {
-        if (language !== selectedLanguage) {
+        if (language !== languageRef.current) {
           setSelectedLanguage(language);
           setCodeSnippet(code);
           codeRef.current = code;
@@ -83,6 +122,18 @@ const EditorPage = () => {
         }
       });
 
+      socketRef.current.on(ACTIONS.ROOM_SAVED, ({ message }) => {
+        toast.success(message, { id: 'save-toast' });
+      });
+
+      socketRef.current.on(ACTIONS.ROOM_SAVE_ERROR, ({ message }) => {
+        toast.error(message, { id: 'save-toast' });
+      });
+
+      socketRef.current.on(ACTIONS.ROOM_DELETED, ({ message }) => {
+        toast.success(message, { id: 'save-toast' });
+      });
+
       //Listening for disconnected event from server
       socketRef.current.on(ACTIONS.DISCONNECTED, ({ socketId, username }) => {
         toast.success(`${username} left the room.`);
@@ -96,19 +147,22 @@ const EditorPage = () => {
 
     //Here on is the listener and we need to clean up the event listeners when component unmounts always(to avoid memory leaks)
     return () => {
-      if (socketRef.current) {
-        socketRef.current.off('connect_error');
-        socketRef.current.off('connect_failed');
-        socketRef.current.off(ACTIONS.JOINED);
-        socketRef.current.off(ACTIONS.DISCONNECTED);
-        socketRef.current.off(ACTIONS.LANGUAGE_CHANGE);
-        socketRef.current.off(ACTIONS.SYNC_RUNNING);
-        socketRef.current.off(ACTIONS.SYNC_OUTPUT);
-        socketRef.current.disconnect();
+      const socket = socketRef.current;
+      if (socket) {
+        socket.off('connect_error');
+        socket.off('connect_failed');
+        socket.off(ACTIONS.JOINED);
+        socket.off(ACTIONS.DISCONNECTED);
+        socket.off(ACTIONS.LANGUAGE_CHANGE);
+        socket.off(ACTIONS.SYNC_RUNNING);
+        socket.off(ACTIONS.SYNC_OUTPUT);
+        socket.off(ACTIONS.AUTHORITY_CHANGED);
+        socket.off(ACTIONS.ROOM_FULL);
+        socket.disconnect();
       }
     }
 
-  }, [roomId, reactNavigator, location.state]);
+  }, [roomId, reactNavigator, location.state, setClients, setCurrentUserInfo, setLoading, setOutput, setSelectedLanguage, setCodeSnippet]);
 
   const handleSelect = (eventKey) => {
     const newSnippet = LANGUAGE_VERSIONS[eventKey]?.snippet || "";
@@ -136,6 +190,11 @@ const EditorPage = () => {
 
   //Run code fucntionality
   async function runCode() {
+    if (!currentUserInfo.canRunCode) {
+      toast.error('You do not have authority to run code. Please ask the admin.');
+      return;
+    }
+
     const currentCode = codeRef.current || codeSnippet;
     const language = selectedLanguage;
 
@@ -225,6 +284,58 @@ const EditorPage = () => {
     reactNavigator('/');
   }
 
+  const toggleAuthority = (targetSocketId, currentAuthority) => {
+    if (socketRef.current) {
+      socketRef.current.emit(ACTIONS.REQUEST_AUTHORITY, {
+        roomId,
+        targetSocketId,
+        canRunCode: !currentAuthority,
+      });
+    }
+  };
+
+  const saveCodespace = () => {
+    if (!isSignedIn) {
+      toast.error('You must be signed in to save the codespace.');
+      return;
+    }
+    if (!currentUserInfo.isAdmin) {
+      toast.error('Only the room admin can save the codespace.');
+      return;
+    }
+
+    if (socketRef.current) {
+      socketRef.current.emit(ACTIONS.SAVE_ROOM, {
+        roomId,
+        code: codeRef.current || codeSnippet,
+        language: selectedLanguage,
+        userId: user.id,
+      });
+      toast.loading('Saving codespace...', { id: 'save-toast' });
+    }
+  };
+
+  const deleteCodespace = () => {
+    if (!isSignedIn) {
+      toast.error('You must be signed in to delete the codespace.');
+      return;
+    }
+    if (!currentUserInfo.isAdmin) {
+      toast.error('Only the room admin can delete the codespace.');
+      return;
+    }
+
+    if (window.confirm('Are you sure you want to delete the saved codespace? This cannot be undone.')) {
+      if (socketRef.current) {
+        socketRef.current.emit(ACTIONS.DELETE_ROOM, {
+          roomId,
+          userId: user.id,
+        });
+        toast.loading('Deleting codespace...', { id: 'save-toast' });
+      }
+    }
+  };
+
   if (!location.state) {
     return <Navigate to="/" />;
   }
@@ -240,7 +351,15 @@ const EditorPage = () => {
           <h3 className='connectedText'>Connected</h3>
           <div className='clientsList'>
             {clients.map((client) => (
-              <Client username={client.username} key={client.socketId} />
+              <Client
+                username={client.username}
+                key={client.socketId}
+                isAdmin={client.isAdmin}
+                canRunCode={client.permissions.canRunCode}
+                isMe={client.username === location.state?.username}
+                onToggleAuthority={() => toggleAuthority(client.socketId, client.permissions.canRunCode)}
+                showControls={currentUserInfo.isAdmin && client.username !== location.state?.username}
+              />
             ))}
           </div>
         </div>
@@ -259,7 +378,42 @@ const EditorPage = () => {
               ))}
             </Dropdown.Menu>
           </Dropdown>
-          <button className='btn run' onClick={runCode} disabled={loading}><img src={play} alt="Run Icon" className='runImage' />{loading ? 'Running...' : 'Run Code'}</button>
+          <button
+            className='btn run'
+            onClick={runCode}
+            disabled={loading || !currentUserInfo.canRunCode}
+            style={{ opacity: (!currentUserInfo.canRunCode) ? 0.5 : 1, cursor: (!currentUserInfo.canRunCode) ? 'not-allowed' : 'pointer' }}
+          >
+            <img src={play} alt="Run Icon" className='runImage' />
+            {loading ? 'Running...' : (currentUserInfo.canRunCode ? 'Run Code' : 'No Authority')}
+          </button>
+
+          {currentUserInfo.isAdmin && (
+            <div style={{ display: 'flex', gap: '5px' }}>
+              <button
+                className='btn save'
+                onClick={saveCodespace}
+                disabled={!isSignedIn}
+                title={isSignedIn ? 'Save Codespace for 24h' : 'Sign in to Save'}
+                style={{ opacity: isSignedIn ? 1 : 0.5 }}
+              >
+                Save 24h
+              </button>
+              <button
+                className='btn deleteBtn'
+                onClick={deleteCodespace}
+                disabled={!isSignedIn}
+                title={isSignedIn ? 'Delete Saved Codespace' : 'Sign in to delete'}
+                style={{ opacity: isSignedIn ? 1 : 0.5, backgroundColor: '#dc2626' }}
+              >
+                Delete Save
+              </button>
+            </div>
+          )}
+
+          <div style={{ marginLeft: '10px' }}>
+            <UserButton />
+          </div>
         </div>
 
         <Editor socketRef={socketRef} roomId={roomId} onCodeChange={(code) => { codeRef.current = code }} selectedLanguage={selectedLanguage} codeSnippet={codeSnippet} />
