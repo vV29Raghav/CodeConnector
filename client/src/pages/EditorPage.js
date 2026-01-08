@@ -107,7 +107,7 @@ const EditorPage = () => {
     }
 
     try {
-      const response = await fetch('process.env.RUN_CODE_URL', {
+      const response = await fetch(process.env.REACT_APP_RUN_CODE_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code: currentCode, language }),
