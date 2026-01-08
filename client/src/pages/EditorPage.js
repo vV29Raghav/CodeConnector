@@ -107,7 +107,12 @@ const EditorPage = () => {
     }
 
     try {
-      const response = await fetch(process.env.REACT_APP_RUN_CODE_URL, {
+      const url = process.env.REACT_APP_RUN_CODE_URL;
+      if (!url || !url.startsWith('http')) {
+        throw new Error(`Invalid Run Code URL: "${url}". Please check your Vercel/local environment settings.`);
+      }
+
+      const response = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code: currentCode, language }),
