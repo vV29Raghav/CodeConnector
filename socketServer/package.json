@@ -1,4 +1,11 @@
 {
+  "name": "socket-server",
+  "version": "1.0.0",
+  "description": "Socket server for Code Connector",
+  "main": "server.js",
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "dependencies": {
     "@google/genai": "^1.30.0",
     "cors": "^2.8.5",
