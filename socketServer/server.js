@@ -1,18 +1,22 @@
 const ACTIONS = require('../client/src/Utils/Actions.js');
 const express = require('express');
 const app = express();
+
 require('dotenv').config();
+
 const { GoogleGenAI } = require('@google/genai');
 const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY,
 });
-const cors = require('cors');
 
+const cors = require('cors');
 const http = require('http');
 app.use(cors());
-const { Server } = require('socket.io');
-const server = http.createServer(app);
-const io = new Server(server, {
+
+const { Server } = require('socket.io'); //creates Socket.io server instance
+const server = http.createServer(app); //create http server and attach our app with it
+
+const io = new Server(server, {//Allow web socket on that http server
   cors: {
     origin: '*',
     methods: ['GET', 'POST'],
@@ -123,6 +127,6 @@ app.post('/run-code', express.json(), async (req, res) => {
   }
 });
 
-server.listen(PORT, () => {
+server.listen(PORT, () => { //we do server.listen so that it will not create another http server 
   console.log(`listening on *:${PORT}`);
 });
