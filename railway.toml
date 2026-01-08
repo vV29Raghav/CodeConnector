@@ -1,7 +1,2 @@
-root = "socketServer"
-
 [build]
-builder = "nixpacks"
-
-[deploy]
-startCommand = "npm start"
+root = "socketServer"
