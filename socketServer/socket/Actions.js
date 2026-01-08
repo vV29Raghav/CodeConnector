@@ -10,4 +10,4 @@ const ACTIONS = {
     SYNC_OUTPUT: 'sync_output',
 };
 
-export default ACTIONS;
+module.exports = ACTIONS;

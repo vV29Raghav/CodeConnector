@@ -6,7 +6,7 @@ import Sidebar from '../components/Sidebar';
 import EditorHeader from '../components/EditorHeader';
 import { useSocket } from '../hooks/useSocket';
 import ACTIONS from '../Utils/Actions';
-import { LANGUAGE_VERSIONS } from '../Utils/constants.js';
+import { LANGUAGE_VERSIONS } from '../Utils/constants';
 
 const EditorPage = () => {
   const codeRef = useRef(null);
@@ -107,7 +107,7 @@ const EditorPage = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/run-code', {
+      const response = await fetch('http://localhost:4000/run-code', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ code: currentCode, language }),
