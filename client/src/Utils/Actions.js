@@ -8,6 +8,9 @@ const ACTIONS = {
     LANGUAGE_CHANGE: 'language_change',
     SYNC_RUNNING: 'sync_running',
     SYNC_OUTPUT: 'sync_output',
+    SAVE_CODE: 'save_code',
+    TOGGLE_RUN_PERMISSION: 'toggle_run_permission',
+    PERMISSION_CHANGED: 'permission_changed',
 };
 
 export default ACTIONS;

@@ -9,7 +9,7 @@ if (!apiKey) {
 const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
 
 exports.executeCode = async (req, res) => {
-    const { language, code } = req.body;
+    const { language, code, input } = req.body;
 
     if (!code || !language) {
         return res.status(400).json({ error: 'Code and language are required' });
@@ -29,8 +29,9 @@ exports.executeCode = async (req, res) => {
         
         CODE:
         ${code}
-
-        Execute this code (or simulate its execution if actual execution is not possible) and return ONLY the standard output and standard error.
+        
+${input ? `The program requires STANDARD INPUT (STDIN). The user provided the following input:\n${input}\n` : ''}
+        Execute this code using the provided inputs (or simulate its execution if actual execution is not possible) and return ONLY the standard output and standard error.
         Do not provide any explanation, comments, or formatting like markdown code blocks. Just the raw output of the code.
         If there is a compilation error or runtime error, return the error message.
         `;

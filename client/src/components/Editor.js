@@ -12,10 +12,15 @@ import 'codemirror/mode/javascript/javascript';
 import ACTIONS from "../Utils/Actions";
 import { LANGUAGE_VERSIONS } from "../Utils/constants";
 
-const Editor = ({ socketRef, roomId, onCodeChange, selectedLanguage, codeSnippet }) => {
+const Editor = ({ socket, roomId, onCodeChange, selectedLanguage, codeSnippet }) => {
 
   const editorRef = useRef(null);
   const editorInitialized = useRef(false);
+  const latestSocket = useRef(socket);
+
+  useEffect(() => {
+    latestSocket.current = socket;
+  }, [socket]);
 
   useEffect(() => {
     if (editorInitialized.current) return; //To ensure editor is initialized only once
@@ -46,8 +51,8 @@ const Editor = ({ socketRef, roomId, onCodeChange, selectedLanguage, codeSnippet
 
         onCodeChange(code); //Callback to update codeRef in EditorPage
 
-        if (origin !== 'setValue' && socketRef.current) {
-          socketRef.current.emit(ACTIONS.CODE_CHANGE, {
+        if (origin !== 'setValue' && latestSocket.current) {
+          latestSocket.current.emit(ACTIONS.CODE_CHANGE, {
             roomId,
             code,
           });
@@ -56,6 +61,7 @@ const Editor = ({ socketRef, roomId, onCodeChange, selectedLanguage, codeSnippet
     };
 
     init();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -79,20 +85,20 @@ const Editor = ({ socketRef, roomId, onCodeChange, selectedLanguage, codeSnippet
 
 
   useEffect(() => {
-    if (socketRef.current) {
-      socketRef.current.on(ACTIONS.CODE_CHANGE, ({ code }) => {
+    if (socket) {
+      socket.on(ACTIONS.CODE_CHANGE, ({ code }) => {
         if (code !== null && code !== editorRef.current.getValue()) {
           editorRef.current.setValue(code);
         }
       });
-      socketRef.current.on(ACTIONS.LANGUAGE_CHANGE, () => { });//Passive listener to avoid errors
+      socket.on(ACTIONS.LANGUAGE_CHANGE, () => { });//Passive listener to avoid errors
+
+      return () => {
+        socket.off(ACTIONS.CODE_CHANGE);
+        socket.off(ACTIONS.LANGUAGE_CHANGE);
+      }
     };
-    return () => {
-      if (!socketRef.current) return;
-      socketRef.current.off(ACTIONS.CODE_CHANGE);
-      socketRef.current.off(ACTIONS.LANGUAGE_CHANGE);
-    }
-  }, [socketRef.current]);
+  }, [socket]);
 
   return (
 

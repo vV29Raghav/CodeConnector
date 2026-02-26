@@ -1,61 +1,67 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { initSocket } from '../Utils/socket';
 import ACTIONS from '../Utils/Actions';
 import { useNavigate } from 'react-router-dom';
 
 export const useSocket = (roomId, username, handlers) => {
-    const socketRef = useRef(null);
-    const effectRan = useRef(false);
+    const [socket, setSocket] = useState(null);
     const navigate = useNavigate();
+    const handlersRef = useRef(handlers);
+
+    // Update handlers ref when handlers change
+    useEffect(() => {
+        handlersRef.current = handlers;
+    }, [handlers]);
 
     useEffect(() => {
-        if (effectRan.current) return;
-        effectRan.current = true;
+        let socketInstance;
 
         const init = async () => {
-            socketRef.current = await initSocket();
+            try {
+                socketInstance = await initSocket();
+                setSocket(socketInstance);
 
-            function handleErrors(e) {
-                console.log('Socket error', e);
-                toast.error('Socket connection failed, try again later.');
+                function handleErrors(e) {
+                    console.error('Socket error', e);
+                    toast.error('Socket connection failed, try again later.');
+                    navigate('/');
+                }
+
+                socketInstance.on('connect_error', handleErrors);
+                socketInstance.on('connect_failed', handleErrors);
+
+                // Join the room
+                socketInstance.emit(ACTIONS.JOIN, {
+                    roomId,
+                    username,
+                });
+
+                // Event Listeners using ref to avoid re-attaching
+                socketInstance.on(ACTIONS.JOINED, (data) => handlersRef.current.onJoined?.(data));
+                socketInstance.on(ACTIONS.LANGUAGE_CHANGE, (data) => handlersRef.current.onLanguageChange?.(data));
+                socketInstance.on(ACTIONS.CODE_CHANGE, (data) => handlersRef.current.onCodeChange?.(data));
+                socketInstance.on(ACTIONS.SYNC_RUNNING, (data) => handlersRef.current.onSyncRunning?.(data));
+                socketInstance.on(ACTIONS.SYNC_OUTPUT, (data) => handlersRef.current.onSyncOutput?.(data));
+                socketInstance.on(ACTIONS.DISCONNECTED, (data) => handlersRef.current.onDisconnected?.(data));
+
+            } catch (err) {
+                console.error('Socket initialization failed', err);
+                toast.error('Failed to connect to the server');
                 navigate('/');
             }
-
-            socketRef.current.on('connect_error', handleErrors);
-            socketRef.current.on('connect_failed', handleErrors);
-
-            // Join the room
-            socketRef.current.emit(ACTIONS.JOIN, {
-                roomId,
-                username,
-            });
-
-            // Event Listeners
-            socketRef.current.on(ACTIONS.JOINED, handlers.onJoined);
-            socketRef.current.on(ACTIONS.LANGUAGE_CHANGE, handlers.onLanguageChange);
-            socketRef.current.on(ACTIONS.CODE_CHANGE, handlers.onCodeChange);
-            socketRef.current.on(ACTIONS.SYNC_RUNNING, handlers.onSyncRunning);
-            socketRef.current.on(ACTIONS.SYNC_OUTPUT, handlers.onSyncOutput);
-            socketRef.current.on(ACTIONS.DISCONNECTED, handlers.onDisconnected);
         };
 
-        init();
+        if (roomId && username) {
+            init();
+        }
 
         return () => {
-            if (socketRef.current) {
-                socketRef.current.off('connect_error');
-                socketRef.current.off('connect_failed');
-                socketRef.current.off(ACTIONS.JOINED);
-                socketRef.current.off(ACTIONS.DISCONNECTED);
-                socketRef.current.off(ACTIONS.LANGUAGE_CHANGE);
-                socketRef.current.off(ACTIONS.CODE_CHANGE);
-                socketRef.current.off(ACTIONS.SYNC_RUNNING);
-                socketRef.current.off(ACTIONS.SYNC_OUTPUT);
-                socketRef.current.disconnect();
+            if (socketInstance) {
+                socketInstance.disconnect();
             }
         };
     }, [roomId, username, navigate]);
 
-    return socketRef;
+    return socket;
 };

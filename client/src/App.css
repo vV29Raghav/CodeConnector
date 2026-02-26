@@ -54,6 +54,38 @@ footer {
   font-weight: bold;
 }
 
+.authWrapper {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.authBtn {
+  width: 100px !important;
+  margin: 0 !important;
+  padding: 8px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #6c757d;
+  color: white !important;
+}
+
+.loginBtn {
+  background-color: #0d6efd !important;
+}
+
+.signupBtn {
+  background-color: #6610f2 !important;
+}
+
+.userIcon {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+}
+
 .btn {
   padding: 10px;
   color: black;
@@ -430,22 +462,33 @@ footer {
   white-space: nowrap;
 }
 
-.outWindow {
+.consoleWrap {
+  display: flex;
+  flex-direction: row;
+  height: 40px;
   background-color: #1a202c;
   border-top: 1px solid rgba(251, 291, 36, 0.4);
-  padding: 10px 15px;
-  height: 40px;
   transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
   position: relative;
   z-index: 10;
 }
 
-.outWindow:hover {
+.consoleWrap:hover {
   height: 300px;
+}
+
+.inWindow,
+.outWindow {
+  flex: 1;
+  padding: 10px 15px;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
   overflow-y: auto;
 }
 
+.inWindow h4,
 .outWindow h4 {
   margin: 0;
   font-size: 14px;
@@ -455,6 +498,24 @@ footer {
   height: 20px;
   display: flex;
   align-items: center;
+}
+
+.input-textarea {
+  flex: 1;
+  margin-top: 15px;
+  background-color: transparent;
+  color: #cbd5e0;
+  border: none;
+  resize: none;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 14px;
+  outline: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.consoleWrap:hover .input-textarea {
+  opacity: 1;
 }
 
 .output-text {
@@ -467,7 +528,7 @@ footer {
   transition: opacity 0.2s ease;
 }
 
-.outWindow:hover .output-text {
+.consoleWrap:hover .output-text {
   opacity: 1;
 }
 
