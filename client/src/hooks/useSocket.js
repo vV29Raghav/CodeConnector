@@ -20,12 +20,30 @@ export const useSocket = (roomId, username, handlers) => {
         const init = async () => {
             try {
                 socketInstance = await initSocket();
+                if (!socketInstance.connected) {
+                    socketInstance.connect();
+                }
                 setSocket(socketInstance);
 
+                let attempt = 0;
                 function handleErrors(e) {
                     console.error('Socket error', e);
-                    toast.error('Socket connection failed, try again later.');
-                    navigate('/');
+                    attempt++;
+                    if (attempt === 1) {
+                        toast('Waking up the server... This might take up to a minute.', { icon: '⏳', duration: 10000 });
+                    }
+                    if (attempt > 6) {
+                        toast.error('Socket connection failed, try again later.');
+                        navigate('/');
+                    }
+                }
+
+                socketInstance.on('connect', () => {
+                    handlersRef.current.onConnect?.();
+                });
+
+                if (socketInstance.connected) {
+                    handlersRef.current.onConnect?.();
                 }
 
                 socketInstance.on('connect_error', handleErrors);

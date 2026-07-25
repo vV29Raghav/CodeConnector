@@ -3,7 +3,7 @@ let socket = null;
 
 export const initSocket = () => {
   if (!socket) {
-    socket = io(process.env.REACT_APP_SOCKET_URL, {
+    socket = io(import.meta.env.VITE_SOCKET_URL, {
       transports: ["websocket"],
       reconnection: true,
       reconnectionAttempts: Infinity,
