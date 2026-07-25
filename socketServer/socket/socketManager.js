@@ -3,8 +3,10 @@ const ACTIONS = require("./Actions");
 const Redis = require("ioredis");
 
 // Initialize Redis Client
+
+
 // It will use process.env.REDIS_URL if provided, else defaults to localhost:6379
-const redis = new Redis(process.env.REDIS_URL || undefined);
+const redis = new Redis(process.env.REDIS_URL || "redis://localhost:6379");
 redis.on("error", (err) => console.log("Redis Client Error", err));
 
 const userSocketMap = {};

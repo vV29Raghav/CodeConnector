@@ -33,15 +33,10 @@ const Editor = ({ socket, roomId, onCodeChange, selectedLanguage, codeSnippet })
         autocloseTags: true,
         autoCloseBrackets: true,
         lineNumbers: true,
-      });
-
-      editorRef.current.on('beforeChange', (instance, change) => {
-        if (change.origin === 'paste') {
-          if (change.text.length > 2) {
-            change.cancel();
-            toast.error("You cannot paste more than 2 lines of code!");
-          }
-        }
+        lineWrapping: false,
+        matchBrackets: true,
+        tabSize: 4,
+        indentUnit: 4,
       });
 
       editorRef.current.on('change', (instance, changes) => {

@@ -120,8 +120,14 @@ const EditorPage = () => {
       return;
     }
 
-    const currentCode = codeRef.current || codeSnippet;
+    const currentCode = codeRef.current !== null ? codeRef.current : codeSnippet;
     const language = selectedLanguage;
+
+    if (!currentCode || typeof currentCode !== 'string' || !currentCode.trim()) {
+      toast.error('Code cannot be empty');
+      setOutput('Error: Code cannot be empty');
+      return;
+    }
 
     setLoading(true);
     setOutput('Running code...');
