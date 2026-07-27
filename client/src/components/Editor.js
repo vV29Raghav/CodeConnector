@@ -1,5 +1,4 @@
 import React, { useEffect, useRef } from "react";
-import { toast } from 'react-hot-toast';
 import Codemirror from "codemirror";
 import 'codemirror/lib/codemirror.css';
 import 'codemirror/mode/javascript/javascript';

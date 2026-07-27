@@ -21,7 +21,6 @@ const EditorPage = () => {
   const [output, setOutput] = useState('Run code to see output here...');
   const [inputData, setInputData] = useState('');
   const [loading, setLoading] = useState(false);
-  const [isConnecting, setIsConnecting] = useState(true);
   const [isHost, setIsHost] = useState(false);
   const latestSocket = useRef(null);
 
@@ -81,10 +80,6 @@ const EditorPage = () => {
     setClients((prev) => prev.filter(client => client.socketId !== socketId));
   }, []);
 
-  const onConnect = useCallback(() => {
-    setIsConnecting(false);
-  }, []);
-
   // Handlers bundle for useSocket hook
   const handlers = useMemo(() => ({
     onJoined,
@@ -93,9 +88,8 @@ const EditorPage = () => {
     onSyncRunning,
     onSyncOutput,
     onSyncInput,
-    onDisconnected,
-    onConnect
-  }), [onJoined, onLanguageChange, onCodeChange, onSyncRunning, onSyncOutput, onSyncInput, onDisconnected, onConnect]);
+    onDisconnected
+  }), [onJoined, onLanguageChange, onCodeChange, onSyncRunning, onSyncOutput, onSyncInput, onDisconnected]);
 
   const socket = useSocket(roomId, username, handlers);
 
@@ -142,7 +136,7 @@ const EditorPage = () => {
     }
 
     try {
-      const url = import.meta.env.VITE_RUN_CODE_URL;
+      const url = process.env.REACT_APP_RUN_CODE_URL;
       if (!url || !url.startsWith('http')) {
         throw new Error(`Invalid Run Code URL: "${url}". Please check your Vercel/local environment settings.`);
       }
@@ -216,20 +210,6 @@ const EditorPage = () => {
 
   if (!username) {
     return <Navigate to="/" />;
-  }
-
-  if (isConnecting) {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', backgroundColor: '#1c1e29', color: '#fff' }}>
-         <div className="spinner-border text-success" role="status" style={{ width: '4rem', height: '4rem', borderWidth: '0.4rem' }}>
-           <span className="visually-hidden">Loading...</span>
-         </div>
-         <h3 style={{ marginTop: '1.5rem' }}>Connecting to Workspace...</h3>
-         <p style={{ color: '#888', textAlign: 'center', marginTop: '0.5rem', maxWidth: '400px' }}>
-           Our backend server might be sleeping. Please hold on for a moment while we wake it up (this can take up to a minute).
-         </p>
-      </div>
-    );
   }
 
   return (
